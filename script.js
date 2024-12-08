@@ -282,51 +282,88 @@ const getPosition =function(){
 };
 // getPosition().then(pos=>console.log(pos));
 
-const whereAmI = function(){
-    getPosition().then(pos=>{
-        const {latitude:lat, longitude:lng} = pos.coords;
-        return fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}`);
-    })
-    .then(res=>{
-    if(!res.ok) throw new Error(`Problem with geocoding ${res.status}`)
-    return res.json()
-
-   })
-   .then(data=>
-    { 
-        // `https://restcountries.com/v3.1/alpha/${neighbour}`
+const whereAmI = async function(){
+   try
+   { // GeoLocation
+    const pos = await getPosition();
+    const {latitude:lat, longitude:lng} = pos.coords;
     
-        console.log(data);
-        
-        console.log(`you are in ${data.city}, ${data.countryName}`);
-       return fetch(`https://restcountries.com/v3.1/name/${data.countryName}`)
-    })
-    .then(res=>{
-        
-        if(!res.ok) throw new Error(`country not found ${res.status}`);
-        return res.json();
-    }).then(data=>
-        { 
-            // main country
-            renderCountry(data[0])
-           const neighbour=data[0].borders?.[0]
-           if(!neighbour) throw new Error(`No neighbouring cuntry found`);
-           return fetch(`https://restcountries.com/v3.1/alpha/${neighbour}`)
-            }).then(res=>{
-                if(!res.ok) throw new Error(`Neighbouring country not found ${res.status}`);
-                return res.json();
-            })
-            .then(data=>{
-                renderCountry(data[0],'neighbour');
-                const neighbour=data[0].borders?.[0];
-                if(!neighbour) throw new Error(`No neighbouring cuntry found`);
-                return fetch(`https://restcountries.com/v3.1/alpha/${neighbour}`)
+    // Reverse geocoding
+    const resGeo = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}`);
+    if(!resGeo.ok) throw new Error('problem getting location data')
 
-                }).then(res=>{
-                    if(!res.ok) throw new Error(`Neighbouring country not found ${res.status}`);
-                    return res.json();
-                }).then(data=>renderCountry(data[0],'neighbour'))
-            .catch(err=>console.error(`${err.message}`))
+    const dataGeo= await resGeo.json();
+
+    // Country data
+    const res1 = await fetch(`https://restcountries.com/v3.1/name/${dataGeo.countryName}`);
+    
+    if(!res1.ok) throw new Error('problem getting location data')
+    
+    const data1 = await res1.json();
+    renderCountry(data1[0]);
+
+    // neighbouring country
+    const neighbour=data1[0].borders?.[0];
+    const res2 = await fetch(`https://restcountries.com/v3.1/alpha/${neighbour}`);
+    if(!res2.ok) throw new Error('problem getting location data')
+
+    const data2 = await res2.json();
+    renderCountry(data2[0],'neighbour');
 }
-btn.addEventListener('click',whereAmI)
+catch(err){
+    console.error(`${err}`);
+    renderError(`Something Went Wrong ${err.message}`)
+}
+}
+whereAmI();
+
+//     getPosition().then(pos=>{
+//         const {latitude:lat, longitude:lng} = pos.coords;
+//         return fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}`);
+//     })
+//     .then(res=>{
+//     if(!res.ok) throw new Error(`Problem with geocoding ${res.status}`)
+//     return res.json()
+
+//    })
+//    .then(data=>
+//     { 
+//         // `https://restcountries.com/v3.1/alpha/${neighbour}`
+    
+//         console.log(data);
+        
+//         console.log(`you are in ${data.city}, ${data.countryName}`);
+//        return fetch(`https://restcountries.com/v3.1/name/${data.countryName}`)
+//     })
+//     .then(res=>{
+        
+//         if(!res.ok) throw new Error(`country not found ${res.status}`);
+//         return res.json();
+//     }).then(data=>
+//         { 
+//             // main country
+//             renderCountry(data[0])
+//            const neighbour=data[0].borders?.[0]
+//            if(!neighbour) throw new Error(`No neighbouring cuntry found`);
+//            return fetch(`https://restcountries.com/v3.1/alpha/${neighbour}`)
+//             }).then(res=>{
+//                 if(!res.ok) throw new Error(`Neighbouring country not found ${res.status}`);
+//                 return res.json();
+//             })
+//             .then(data=>{
+//                 renderCountry(data[0],'neighbour');
+//                 const neighbour=data[0].borders?.[0];
+//                 if(!neighbour) throw new Error(`No neighbouring cuntry found`);
+//                 return fetch(`https://restcountries.com/v3.1/alpha/${neighbour}`)
+
+//                 }).then(res=>{
+//                     if(!res.ok) throw new Error(`Neighbouring country not found ${res.status}`);
+//                     return res.json();
+//                 }).then(data=>renderCountry(data[0],'neighbour'))
+//             .catch(err=>console.error(`${err.message}`))
+
+// btn.addEventListener('click',whereAmI)
 // whereAmI(11.026432,77.0080768)
+
+///////////////////////////////////////////////////////////////////////////////////
+
