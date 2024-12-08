@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "core-js": "^3.39.0",
+    "parcel": "^2.13.2",
+    "regenerator-runtime": "^0.14.1"
+  },
+  "scripts": {
+    "start":"parcel index.html",
+    "build":"parcel build index.html"
+
+  }
+}
